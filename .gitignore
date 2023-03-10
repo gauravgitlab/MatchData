@@ -1,0 +1,10 @@
+*.csproj
+*.sln
+obj/
+Builds/
+AssetBundles/
+Library/
+.vs/
+Assets/ShootingGame/SaveData/user_data
+Temp/
+Assets/ShootingGame/SaveData/
