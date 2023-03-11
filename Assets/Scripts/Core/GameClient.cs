@@ -29,6 +29,8 @@ public class GameClient : GameServiceBase
     {
         AddService<IFrameRate>(new FrameRate());
         AddService<IMatchDataReader>(new MatchDataReader());
+        AddService<IBall>(new Ball());
+        AddService<IMatchManager>(new MatchManager());
     }
 
     public static T Get<T>()
