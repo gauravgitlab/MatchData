@@ -10,8 +10,9 @@ public interface IFrameRate
 
 public class FrameRate : IFrameRate, IGameServices
 {
-    public void Init() {
-        SetTargetFrameRate(25);        
+    public void Init() 
+    {
+        SetTargetFrameRate(1);        
     }
 
     public void SetTargetFrameRate(int targetFrameRate)

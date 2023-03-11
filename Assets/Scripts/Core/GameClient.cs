@@ -1,7 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class GameClient : GameServiceBase
 {
@@ -28,8 +24,12 @@ public class GameClient : GameServiceBase
     internal GameClient()
     {
         AddService<IFrameRate>(new FrameRate());
+        AddService<IMatchTimer>(new MatchTimer());
+
         AddService<IMatchDataReader>(new MatchDataReader());
+        AddService<ITrackedObjectsManager>(new TrackedObjectsManager());
         AddService<IBall>(new Ball());
+        
         AddService<IMatchManager>(new MatchManager());
     }
 
