@@ -1,39 +1,48 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using UnityEngine;
 
-public class DataReader : MonoBehaviour
+public interface IMatchDataReader
 {
-    
-    // Start is called before the first frame update
-    void Start()
+    MatchData MatchData { get; }
+    void FetchMatchData(string filePath);
+}
+
+public class MatchDataReader : IMatchDataReader, IGameServices
+{
+    public MatchData MatchData { get; private set; }
+
+    public void Init() 
     {
         string filePath = Path.Combine(Application.dataPath, "Data/Applicant-test.dat");
         FetchMatchData(filePath);
     }
 
-    private void FetchMatchData(string filePath)
+    public void Update() { }
+    public void FixedUpdate() { }
+    public void Release() { }
+    
+    public void FetchMatchData(string filePath)
     {
         if (string.IsNullOrEmpty(filePath))
             return;
 
-        string matchData;
+        string matchDataInString;
         FileStream f = new FileStream(filePath, FileMode.Open, FileAccess.Read);
         using (StreamReader sr = new StreamReader(f))
         {
-            matchData = sr.ReadToEnd();
+            matchDataInString = sr.ReadToEnd();
         }
 
-        if (string.IsNullOrEmpty(matchData))
+        if (string.IsNullOrEmpty(matchDataInString))
             return;
 
-        string[] frames = matchData.Split('\n');
+        string[] frames = matchDataInString.Split('\n');
         frames = frames.Where(x => !string.IsNullOrEmpty(x)).ToArray();
         
+        MatchData matchData = new MatchData();
         for(int i=0; i<frames.Length; i++)
         {
             string[] frameEntry = frames[i].Split(':');
@@ -45,9 +54,12 @@ public class DataReader : MonoBehaviour
                 trackedObjectData = GetTrackedObjectData(frameEntry[1]),
                 ballData = GetBallData(frameEntry[2])
             };
+
+            matchData.Frames.Add(frameData);
         }
 
         Debug.Log($"all {frames.Length} entries done !!");
+        MatchData = matchData;
     }
 
     private List<TrackedObjectData> GetTrackedObjectData(string entry)

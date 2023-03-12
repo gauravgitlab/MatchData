@@ -1,6 +1,14 @@
-
-
 using System.Collections.Generic;
+
+public class MatchData
+{
+    public List<FrameData> Frames;
+
+    public MatchData()
+    {
+        Frames = new List<FrameData>();
+    }
+}
 
 public class FrameData
 {
