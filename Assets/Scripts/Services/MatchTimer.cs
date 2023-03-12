@@ -6,44 +6,29 @@ public interface IMatchTimer
     public void StartTimer(bool reset = false);
     public void StopTimer();
     public void ResetTime();
-    public void UpdateTimer(Action<TimeSpan> updateTimeAction);
+    public void UpdateTimer(Action<float> updateTimeAction);
     public bool IsTimerRunning { get; }
 }
 
 public class MatchTimer : IMatchTimer, IGameServices
 {
-    private TimeSpan startGameTime;
-
     private bool startTimer = false;
 
-    private float startTime = 0f;
-    private float elapsedTime = 0f;
-
-    public TimeSpan GetGameTime => startGameTime;
-
+    private float timer = 0f;
     public bool IsTimerRunning => startTimer;
 
     public void ResetTime()
     {
-        startTime = 0f;
-        elapsedTime = 0f;
+        timer = 0f;
         startTimer = false;
-        startGameTime = TimeSpan.Zero;
     }
 
-    public void UpdateTimer(Action<TimeSpan> updateTimeAction)
+    public void UpdateTimer(Action<float> updateTimeAction)
     {
         if (startTimer)
         {
-            elapsedTime = Time.time - startTime;
-
-            if (elapsedTime >= 1f)
-            {
-                elapsedTime = 0f;
-                startTime = Time.time;
-                startGameTime = startGameTime.Add(new TimeSpan(0, 0, 1));
-                updateTimeAction?.Invoke(startGameTime);
-            }
+            timer += Time.deltaTime;
+            updateTimeAction?.Invoke(timer);
         }
     }
 
@@ -56,7 +41,6 @@ public class MatchTimer : IMatchTimer, IGameServices
             return;
 
         startTimer = true;
-        startTime = Time.time;
     }
 
     public void StopTimer()

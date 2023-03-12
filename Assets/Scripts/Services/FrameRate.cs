@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 public interface IFrameRate
@@ -12,7 +9,7 @@ public class FrameRate : IFrameRate, IGameServices
 {
     public void Init() 
     {
-        SetTargetFrameRate(1);        
+        SetTargetFrameRate(25);        
     }
 
     public void SetTargetFrameRate(int targetFrameRate)

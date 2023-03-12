@@ -6,7 +6,7 @@ public class MatchHUD : MonoBehaviour
 {
     public TextMeshProUGUI TimerText;
 
-    public static Action<TimeSpan> OnUpdateTime;
+    public static Action<float> OnUpdateTime;
 
     // Start is called before the first frame update
     void Start()
@@ -14,14 +14,15 @@ public class MatchHUD : MonoBehaviour
         OnUpdateTime += UpdateTimer;
     }
 
-    private void UpdateTimer(TimeSpan ts)
+    private void UpdateTimer(float timer)
     {
-        TimerText.text = GetTimeInString(ts);
+        TimerText.text = GetTimeInString(timer);
     }
 
-    public string GetTimeInString(TimeSpan time)
+    public string GetTimeInString(float time)
     {
-        return string.Format("{0:00}:{1:00}:{2:00}", 
-                            time.Hours, time.Minutes, time.Seconds);
+        int minutes = Mathf.FloorToInt(time / 60f);
+        int seconds = Mathf.FloorToInt(time - minutes * 60f);
+        return string.Format("{0:00}:{1:00}", minutes, seconds);
     }
 }

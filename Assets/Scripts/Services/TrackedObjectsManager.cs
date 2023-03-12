@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -26,7 +25,8 @@ public class TrackedObjectsManager : ITrackedObjectsManager, IGameServices
         for (int i=0; i < trackedObjects.Count; i++)
         {
             GameObject trackedGameObject = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            var trackedObject = trackedGameObject.AddComponent<TrackedObject>();
+            TrackedObject trackedObject = new TrackedObject();
+            trackedObject.Init(trackedGameObject);
             TrackedObjects.Add(trackedObject);
         }
     }

@@ -31,7 +31,7 @@ public class Ball : IBall, IGameServices
     public void ToString()
     {
         string str = $"the ball pos = {PositionX}, {PositionY}, {PositionZ}, speed = {BallSpeed}";
-        Debug.Log(str);
+        //Debug.Log(str);
     }
 
     public void SetPosition(float posX, float posY, float posZ)

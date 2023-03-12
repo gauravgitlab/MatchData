@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class TrackedObject : MonoBehaviour 
+public class TrackedObject 
 {
     public int Team;
     public int TrackingId;
@@ -8,6 +8,13 @@ public class TrackedObject : MonoBehaviour
     public float PositionX;
     public float PositionY;
     public float PositionZ;
+
+    public GameObject gameObject;
+
+    public void Init(GameObject obj)
+    {
+        gameObject = obj;
+    }
 
     public void Set(int team, int trackingId, int playerNumber, float posX, float posY, float posZ)
     {
@@ -18,6 +25,6 @@ public class TrackedObject : MonoBehaviour
         PositionY = posY;
         PositionZ = posZ;
 
-        transform.position = new Vector3(PositionX, PositionY, PositionZ);
+        gameObject.transform.position = new Vector3(PositionX, PositionY, PositionZ);
     }
 }
