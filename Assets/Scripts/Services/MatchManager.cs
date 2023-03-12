@@ -35,7 +35,7 @@ public class MatchManager : IMatchManager, IGameServices
             return;
         }
 
-        UnityEngine.Debug.Log(currentFrame);
+        //UnityEngine.Debug.Log(currentFrame);
         if(!matchTimer.IsTimerRunning)
             matchTimer.StartTimer(true);
 
