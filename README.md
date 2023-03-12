@@ -3,8 +3,11 @@ Match Data - The "Applicant-test.dat" datafile consists of roughly 9 minutes of 
 
 # Data format
 Frame:FrameCount:[TrackedObjects][BallData]
+
 TrackedObject:Team,TrackingID,PlayerNumber,X-Position,Y-Position,[…];
+
 BallData:
+
 :X-Position,Y-Position,Z-Position,BallSpeed,[ClickerFlags]
 
 # Use
@@ -24,6 +27,7 @@ BallData:
 ---------------------------------------------------------------------------------
 
 #frame, team, trackingid, playerNumber
+
 1519819,0,1,18
 
 ----------------------------------------------------------------------------------
