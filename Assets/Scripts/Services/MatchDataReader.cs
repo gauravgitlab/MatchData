@@ -2,50 +2,43 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Playables;
 
-public interface IMatchDataReader
+public static class MatchDataReader
 {
-    MatchData MatchData { get; }
-    void FetchMatchData(string filePath);
-}
-
-public class MatchDataReader : IMatchDataReader, IGameServices
-{
-    public MatchData MatchData { get; private set; }
-
-    public void Init() 
-    {
-        string filePath = Path.Combine(Application.dataPath, "Data/Applicant-test.dat");
-        FetchMatchData(filePath);
-    }
-
-    public void Update() { }
-    public void FixedUpdate() { }
-    public void Release() { }
-    
-    public void FetchMatchData(string filePath)
+    public static async Task<MatchData> FetchMatchData(string filePath)
     {
         if (string.IsNullOrEmpty(filePath))
-            return;
+            return null;
 
-        string matchDataInString;
-        FileStream f = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-        using (StreamReader sr = new StreamReader(f))
-        {
-            matchDataInString = sr.ReadToEnd();
-        }
-
+        string matchDataInString = await File.ReadAllTextAsync(filePath);
         if (string.IsNullOrEmpty(matchDataInString))
-            return;
+            return null;
 
         string[] frames = matchDataInString.Split('\n');
         frames = frames.Where(x => !string.IsNullOrEmpty(x)).ToArray();
         
         MatchData matchData = new MatchData();
+        var tasks = new List<Task<FrameData>>();
         for(int i=0; i<frames.Length; i++)
         {
-            string[] frameEntry = frames[i].Split(':');
+            tasks.Add(FetchFrame(frames[i]));
+        }
+
+        FrameData[] result = await Task.WhenAll(tasks);
+        matchData.Frames.AddRange(result);
+
+        Debug.Log($"all {frames.Length} entries done !!");
+        return matchData;
+    }
+
+    private static Task<FrameData> FetchFrame(string frame)
+    {
+        return Task.Run(() =>
+        {
+            string[] frameEntry = frame.Split(':');
             frameEntry = frameEntry.Where(x => !string.IsNullOrEmpty(x.Trim())).ToArray();
 
             FrameData frameData = new FrameData()
@@ -55,14 +48,11 @@ public class MatchDataReader : IMatchDataReader, IGameServices
                 ballData = GetBallData(frameEntry[2])
             };
 
-            matchData.Frames.Add(frameData);
-        }
+            return frameData;
+        });
+    } 
 
-        Debug.Log($"all {frames.Length} entries done !!");
-        MatchData = matchData;
-    }
-
-    private List<TrackedObjectData> GetTrackedObjectData(string entry)
+    private static List<TrackedObjectData> GetTrackedObjectData(string entry)
     {
         List<TrackedObjectData> trackedObjectDataList = new List<TrackedObjectData>();
 
@@ -87,7 +77,7 @@ public class MatchDataReader : IMatchDataReader, IGameServices
         return trackedObjectDataList;
     }
 
-    private BallData GetBallData(string entry)
+    private static BallData GetBallData(string entry)
     {
         string[] ballEntry = entry.Split(",");
         BallData ballData = new BallData()
