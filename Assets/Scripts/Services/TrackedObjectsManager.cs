@@ -1,51 +1,47 @@
 using System.Collections.Generic;
 using UnityEngine;
+using BSports;
 
-public interface ITrackedObjectsManager
+namespace BSports
 {
-    List<TrackedObject> TrackedObjects { get; }
-    void SetTrackedObjects(int currentFrame);
-}
-
-public class TrackedObjectsManager : ITrackedObjectsManager, IGameServices
-{
-    private IMatchDataReader matchDataReader;
-
-    public List<TrackedObject> TrackedObjects { get; private set; }
-
-    public void Init()
+    public class TrackedObjectsManager : MonoBehaviour
     {
-        matchDataReader = GameClient.Get<IMatchDataReader>();
+        public List<Player> TrackedObjects = new List<Player>();
+        public Ball ball;
 
-        if (matchDataReader == null || matchDataReader.MatchData == null)
-            return;
-
-        TrackedObjects = new List<TrackedObject>();
-        List<TrackedObjectData> trackedObjects = matchDataReader.MatchData.Frames[0].trackedObjectData;
-        for (int i=0; i < trackedObjects.Count; i++)
+        public void SetPlayersOnFrame(List<TrackedObjectData> playersData)
         {
-            GameObject trackedGameObject = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            TrackedObject trackedObject = new TrackedObject();
-            trackedObject.Init(trackedGameObject);
-            TrackedObjects.Add(trackedObject);
+            foreach (var playerData in playersData)
+            {
+                Player player = null;
+                var playerIndex = TrackedObjects.FindIndex(p => p.TrackingId == playerData.trackingId);
+                if (playerIndex == -1)
+                {
+                    GameObject trackedGameObject = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                    player = trackedGameObject.AddComponent<Player>();
+                    TrackedObjects.Add(player);
+                }
+                else
+                {
+                    player = TrackedObjects[playerIndex].GetComponent<Player>();
+                }
+
+                player.SetTeam(playerData.team, playerData.trackingId, playerData.playerNumber);
+                player.SetPosition(playerData.positionX, playerData.positionY, playerData.positionZ);
+
+            }
+        }
+
+        public void SetBallOnFrame(BallData ballData)
+        {
+            if (ball == null)
+            {
+                var ballGameObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                ball = ballGameObject.AddComponent<Ball>();
+            }
+
+            ball.SetPosition(ballData.positionX, ballData.positionY, ballData.positionZ);
+            ball.SetSpeed(ballData.ballSpeed);
         }
     }
-
-    public void SetTrackedObjects(int currentFrame)
-    {
-        List<TrackedObjectData> trackedObjectsData = matchDataReader.MatchData.Frames[currentFrame].trackedObjectData;
-        for(int i=0; i<TrackedObjects.Count; i++)
-        {
-            TrackedObjects[i].Set(trackedObjectsData[i].team,
-                                    trackedObjectsData[i].trackingId,
-                                    trackedObjectsData[i].playerNumber,
-                                    trackedObjectsData[i].positionX,
-                                    trackedObjectsData[i].positionY,
-                                    trackedObjectsData[i].positionZ);
-        }
-    }
-
-    public void Update() { }
-    public void FixedUpdate() { }
-    public void Release() { }
 }

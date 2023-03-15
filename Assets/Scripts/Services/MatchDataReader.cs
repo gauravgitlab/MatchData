@@ -4,90 +4,81 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Playables;
 
-public static class MatchDataReader
+namespace BSports
 {
-    public static async Task<MatchData> FetchMatchData(string filePath)
+    public static class MatchDataReader
     {
-        if (string.IsNullOrEmpty(filePath))
-            return null;
-
-        string matchDataInString = await File.ReadAllTextAsync(filePath);
-        if (string.IsNullOrEmpty(matchDataInString))
-            return null;
-
-        string[] frames = matchDataInString.Split('\n');
-        frames = frames.Where(x => !string.IsNullOrEmpty(x)).ToArray();
-        
-        MatchData matchData = new MatchData();
-        var tasks = new List<Task<FrameData>>();
-        for(int i=0; i<frames.Length; i++)
+        public static async Task<MatchData> FetchMatchData(string filePath)
         {
-            tasks.Add(FetchFrame(frames[i]));
+            if (string.IsNullOrEmpty(filePath))
+                return null;
+
+            string matchDataInString = await File.ReadAllTextAsync(filePath);
+            if (string.IsNullOrEmpty(matchDataInString))
+                return null;
+
+            string[] frames = matchDataInString.Split('\n');
+            frames = frames.Where(x => !string.IsNullOrEmpty(x)).ToArray();
+
+            MatchData matchData = await Task.Run(() =>
+            {
+                MatchData matchData = new MatchData();
+                for (int i = 0; i < frames.Length; i++)
+                {
+                    string[] frameEntry = frames[i].Split(':');
+                    frameEntry = frameEntry.Where(x => !string.IsNullOrEmpty(x.Trim())).ToArray();
+
+                    FrameData frameData = new FrameData()
+                    {
+                        frameCount = Convert.ToUInt32(frameEntry[0]),
+                        playerData = GetTrackedObjectData(frameEntry[1]),
+                        ballData = GetBallData(frameEntry[2])
+                    };
+                    matchData.Frames.Add(frameData);
+                }
+                return matchData;
+            });
+
+            return matchData;
         }
 
-        FrameData[] result = await Task.WhenAll(tasks);
-        matchData.Frames.AddRange(result);
-
-        Debug.Log($"all {frames.Length} entries done !!");
-        return matchData;
-    }
-
-    private static Task<FrameData> FetchFrame(string frame)
-    {
-        return Task.Run(() =>
+        private static List<TrackedObjectData> GetTrackedObjectData(string entry)
         {
-            string[] frameEntry = frame.Split(':');
-            frameEntry = frameEntry.Where(x => !string.IsNullOrEmpty(x.Trim())).ToArray();
+            List<TrackedObjectData> trackedObjectDataList = new List<TrackedObjectData>();
 
-            FrameData frameData = new FrameData()
+            string[] teamData = entry.Split(";");
+            teamData = teamData.Where(x => !string.IsNullOrEmpty(x.Trim())).ToArray();
+            for (int i = 0; i < teamData.Length; i++)
             {
-                frameCount = Convert.ToUInt32(frameEntry[0]),
-                trackedObjectData = GetTrackedObjectData(frameEntry[1]),
-                ballData = GetBallData(frameEntry[2])
-            };
+                string[] objectData = teamData[i].Split(',');
+                TrackedObjectData trackedObjectData = new();
 
-            return frameData;
-        });
-    } 
+                if (int.TryParse(objectData[0], out int team)) trackedObjectData.team = team;
+                if (int.TryParse(objectData[1], out int trackingId)) trackedObjectData.trackingId = trackingId;
+                if (int.TryParse(objectData[2], out int playerNumber)) trackedObjectData.playerNumber = playerNumber;
+                if (float.TryParse(objectData[3], out float posX)) trackedObjectData.positionX = posX;
+                if (float.TryParse(objectData[4], out float posY)) trackedObjectData.positionY = posY;
+                if (float.TryParse(objectData[5], out float posZ)) trackedObjectData.positionZ = posZ;
 
-    private static List<TrackedObjectData> GetTrackedObjectData(string entry)
-    {
-        List<TrackedObjectData> trackedObjectDataList = new List<TrackedObjectData>();
+                trackedObjectDataList.Add(trackedObjectData);
+            }
 
-        string[] teamData = entry.Split(";");
-        teamData = teamData.Where(x => !string.IsNullOrEmpty(x.Trim())).ToArray();
-        for(int i=0; i<teamData.Length; i++)
-        {
-            string[] objectData = teamData[i].Split(',');  
-            TrackedObjectData trackedObjectData = new TrackedObjectData()
-            {
-                team = Convert.ToInt32(objectData[0]),
-                trackingId = Convert.ToInt32(objectData[1]),
-                playerNumber = Convert.ToInt32(objectData[2]),
-                positionX = float.Parse(objectData[3]),
-                positionY = float.Parse(objectData[4]),
-                positionZ = float.Parse(objectData[5])
-            };
-
-            trackedObjectDataList.Add(trackedObjectData);
+            return trackedObjectDataList;
         }
 
-        return trackedObjectDataList;
-    }
-
-    private static BallData GetBallData(string entry)
-    {
-        string[] ballEntry = entry.Split(",");
-        BallData ballData = new BallData()
+        private static BallData GetBallData(string entry)
         {
-            positionX = float.Parse(ballEntry[0]),
-            positionY = float.Parse(ballEntry[1]),
-            positionZ = float.Parse(ballEntry[2]),
-            ballSpeed = float.Parse(ballEntry[3])
-        };
+            string[] ballEntry = entry.Split(",");
+            BallData ballData = new();
 
-        return ballData;
+            if (float.TryParse(ballEntry[0], out float posX)) ballData.positionX = posX;
+            if (float.TryParse(ballEntry[1], out float posY)) ballData.positionY = posY;
+            if (float.TryParse(ballEntry[2], out float posZ)) ballData.positionZ = posZ;
+            if (float.TryParse(ballEntry[3], out float speed)) ballData.ballSpeed = speed;
+
+            return ballData;
+        }
     }
 }
+

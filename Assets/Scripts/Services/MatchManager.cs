@@ -1,66 +1,63 @@
 
-public interface IMatchManager
+using System.IO;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace BSports
 {
-    void SetBallData(BallData ballData);
-}
-
-public class MatchManager : IMatchManager, IGameServices
-{
-    private IBall ball;
-    private ITrackedObjectsManager trackedObjectManager;
-    private IMatchDataReader matchDataReader;
-    private IMatchTimer matchTimer;
-
-    private int currentFrame = 0;
-
-    public void Init()
+    public class MatchManager : MonoBehaviour
     {
-        ball = GameClient.Get<IBall>();
-        trackedObjectManager = GameClient.Get<ITrackedObjectsManager>();
-        matchDataReader = GameClient.Get<IMatchDataReader>();
-        matchTimer= GameClient.Get<IMatchTimer>();
-        currentFrame = 0;
-    }
+        public string fileName = string.Empty;
+        public TrackedObjectsManager trackedObjectManager;
 
-    public void Update() 
-    {
-        if (matchDataReader == null || matchDataReader.MatchData == null)
-            return;
+        private MatchData MatchData { get; set; }
+        private int currentFrame = 0;
+        private MatchTimer matchTimer;
 
-        if (currentFrame >= matchDataReader.MatchData.Frames.Count)
+        private void Start()
         {
-            if(matchTimer.IsTimerRunning)
-                matchTimer.StopTimer();
+            matchTimer = new MatchTimer();
 
-            return;
+            FetchMatchData();
+            Debug.Log("All good");
         }
 
-        //UnityEngine.Debug.Log(currentFrame);
-        if(!matchTimer.IsTimerRunning)
-            matchTimer.StartTimer(true);
-
-        matchTimer.UpdateTimer((time) =>
+        private async void FetchMatchData()
         {
-            MatchHUD.OnUpdateTime?.Invoke(time);
-        });
+            string filePath = Path.Combine(Application.dataPath, "Data", fileName);
+            MatchData = await MatchDataReader.FetchMatchData(filePath);
+        }
 
-        // tracked Objects
-        trackedObjectManager.SetTrackedObjects(currentFrame);
+        public void Update()
+        {
+            if (MatchData == null || MatchData.Frames == null)
+                return;
 
-        // ball data
-        BallData ballData = matchDataReader.MatchData.Frames[currentFrame].ballData;
-        SetBallData(ballData);
+            if (currentFrame >= MatchData.Frames.Count)
+            {
+                if (matchTimer.IsTimerRunning)
+                    matchTimer.StopTimer();
 
-        currentFrame++;
+                return;
+            }
+
+            if (!matchTimer.IsTimerRunning)
+                matchTimer.StartTimer(true);
+
+            matchTimer.UpdateTimer((time) =>
+            {
+                MatchHUD.OnUpdateTime?.Invoke(time);
+            });
+
+            // tracked Objects
+            List<TrackedObjectData> playerData = MatchData.Frames[currentFrame].playerData;
+            trackedObjectManager.SetPlayersOnFrame(playerData);
+
+            // ball data
+            BallData ballData = MatchData.Frames[currentFrame].ballData;
+            trackedObjectManager.SetBallOnFrame(ballData);
+
+            currentFrame++;
+        }
     }
-
-    public void SetBallData(BallData ballData)
-    {
-        ball.SetPosition(ballData.positionX, ballData.positionY, ballData.positionZ);
-        ball.SetSpeed(ballData.ballSpeed);
-        ball.ToString();
-    }
-
-    public void FixedUpdate() { }
-    public void Release() { }
 }

@@ -1,30 +1,20 @@
 using UnityEngine;
 
-public class TrackedObject 
+namespace BSports
 {
-    public int Team;
-    public int TrackingId;
-    public int PlayerNumber;
-    public float PositionX;
-    public float PositionY;
-    public float PositionZ;
-
-    public GameObject gameObject;
-
-    public void Init(GameObject obj)
+    public class TrackedObject : MonoBehaviour
     {
-        gameObject = obj;
-    }
+        public float PositionX;
+        public float PositionY;
+        public float PositionZ;
 
-    public void Set(int team, int trackingId, int playerNumber, float posX, float posY, float posZ)
-    {
-        Team = team;
-        TrackingId = trackingId;
-        PlayerNumber = playerNumber;
-        PositionX = posX;
-        PositionY = posY;
-        PositionZ = posZ;
+        public void SetPosition(float posX, float posY, float posZ)
+        {
+            PositionX = posX;
+            PositionY = posY;
+            PositionZ = posZ;
 
-        gameObject.transform.position = new Vector3(PositionX, PositionY, PositionZ);
+            transform.position = new Vector3(PositionX / 100f, PositionY / 100f, PositionZ/100f);
+        }
     }
 }
