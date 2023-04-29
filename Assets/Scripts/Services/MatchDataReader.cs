@@ -43,6 +43,39 @@ namespace BSports
             return matchData;
         }
 
+        public static async Task<MatchData> FetchMatchDataInBytes(string filePath)
+        {
+            MatchData matchData = new MatchData();
+            byte[] fileContents = File.ReadAllBytes(filePath);
+            using (MemoryStream memoryStream = new MemoryStream(fileContents))
+            {
+                using (TextReader textReader = new StreamReader(memoryStream))
+                {
+                    matchData = await Task.Run(() =>
+                    {
+                        string line;
+                        MatchData matchData = new MatchData();
+                        while ((line = textReader.ReadLine()) != null)
+                        {
+                            string[] frameEntry = line.Split(':');
+                            frameEntry = frameEntry.Where(x => !string.IsNullOrEmpty(x.Trim())).ToArray();
+
+                            FrameData frameData = new FrameData()
+                            {
+                                frameCount = Convert.ToUInt32(frameEntry[0]),
+                                playerData = GetTrackedObjectData(frameEntry[1]),
+                                ballData = GetBallData(frameEntry[2])
+                            };
+                            matchData.Frames.Add(frameData);
+                        }
+                        return matchData;
+                    });
+                }
+            }
+
+            return matchData;
+        }
+
         private static List<TrackedObjectData> GetTrackedObjectData(string entry)
         {
             List<TrackedObjectData> trackedObjectDataList = new List<TrackedObjectData>();

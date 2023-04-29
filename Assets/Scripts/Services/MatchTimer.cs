@@ -10,6 +10,8 @@ namespace BSports
         private float timer = 0f;
         public bool IsTimerRunning => startTimer;
 
+        public float Timer { get { return timer; } }
+
         public void ResetTime()
         {
             timer = 0f;
